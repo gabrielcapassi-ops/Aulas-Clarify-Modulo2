@@ -7,6 +7,7 @@ import time
 import random
 import sqlite3
 import datetime
+import math
 
 # BeautifulSoup biblioteca para analisar HTML e extrair informações
 
@@ -19,13 +20,13 @@ baseURL = 'https://www.adorocinema.com/filmes/melhores/'
 filmes = [] # Lista que vai armazenar os dados coletados de cada filme
 data_hoje = datetime.date.today().strftime("%d-%m-%Y")
 agora = datetime.datetime.now()
-paginaLimite = 6 #Quantidade de paginas que vai analisar
+paginaLimite = 20 #Quantidade de paginas que vai analisar
 card_temp_min = 1
 card_temp_max = 3
 pag_temp_min = 2
 pag_temp_max = 5
 bancoDados = "C:/Users/integral/Desktop/Python 2 Gabriel/banco_filmes.db"
-saidaCSV = f"filmes_adorocinema_{data_hoje}.csv"
+saidaCSV = f"C:/Users/integral/Desktop/Python 2 Gabriel/filmes_adorocinema_{data_hoje}.csv"
 
 
 for pagina in range(1,paginaLimite + 1):
@@ -93,12 +94,14 @@ for pagina in range(1,paginaLimite + 1):
             #aguardar um tempo aleatorio entre os parametos escolhidos para nao sobrecarregar o site e nem revelerar que somos um bot
             tempo = random.uniform(card_temp_min, card_temp_max)
             time.sleep(tempo)
-            print(f"Tempo de espera")
+            tempo_ajustado = math.ceil(tempo)
+            print(f"Tempo de espera {tempo_ajustado}seg")
         except Exception as e:
                 print(f"Erro ao processar o filme {titulo}. Erro: {e}")
     #esperar um tempo entre uma pagina e outra
     tempo = random.uniform(pag_temp_min,pag_temp_max)
     time.sleep(tempo)
+    
 
 #converter os dados coletados para um dataframe do pandas
 df = pd.DataFrame(filmes)
@@ -112,7 +115,7 @@ conn = sqlite3.connect(bancoDados)
 cursor = conn.cursor()
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS filmes(
-        id INTEGER PRIMARY KEY AUTOINCREMENT
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         Titulo TEXT,
         Direcao TEXT,
         Nota REAL,
@@ -136,7 +139,7 @@ for filme in filmes:
         filme['Categoria'],
     ))
     except Exception as e:
-        print(f'Erro ao inserir filme {filme['Titulo']} no banco de dados. Código de identificação do erro: {e}.')
+        print(f"Erro ao inserir filme {filme['Titulo']} no banco de dados. Código de identificação do erro: {e}.")
 conn.commit()
 conn.close()
 
