@@ -38,12 +38,12 @@ vazio = 0
 def index():
     return render_template_string(f'''
         <h1>Upload de dados Economicos</h1>
-        <form action=""{rotas[1]}"" method="POST" enctype="multipart/form-data">                          
+        <form action="{rotas[1]}" method="POST" enctype="multipart/form-data">                          
             <label for="campo_inadimplencia">Arquivo de Inadimplencia (CSV)</label>
-            <input name = campo_inadimplencia" type="file" required>
+            <input name = "campo_inadimplencia" type="file" required>
 
             <label for="campo_selic">Arquivo da Taxa Selic (CSV) </label>
-            <input name=campo_selic" type="file" required>
+            <input name="campo_selic" type="file" required>
 
             <input type="submit" value="Fazer Upload">
         </form>
@@ -52,7 +52,7 @@ def index():
         <a href="{rotas[2]}">Consultar dados armazenados<a></br>
         <a href="{rotas[3]}">Visualizar Graficos<a></br>
         <a href="{rotas[4]}">Editar dados de Inadimplencia<a></br>
-        <a href="{rotas[5]}"">Analisar Correlacao<a></br>
+        <a href="{rotas[5]}">Analisar Correlacao<a></br>
         <a href="{rotas[6]}">Observabilidade em 3<a></br>
         <a href="{rotas[7]}">Editar Selic<a></br>
 ''')
@@ -117,7 +117,7 @@ def consultar():
     if request.method == "POST":
         tabela = request.form.get('campo_tabela')
         if tabela not in ['inadimplencia','selic']:
-            return jsonify(['Erro": "Tabela Invalida']),400
+            return jsonify({'Erro': 'Tabela Invalida'}),400
         with sqlite3.connect(caminhoBd) as conn:
             df = pd.read_sql_query(f'SELECT * FROM {tabela}', conn)
         return df.to_html(index=False)
@@ -186,7 +186,7 @@ def graficos():
 
     graph_html_2 = fig2.to_html(
         full_html = False,
-        include_plotlyjs = "False"
+        include_plotlyjs = False
     )
     return render_template_string('''
         <html>
@@ -207,13 +207,13 @@ def graficos():
             </head>
             <body>
                 <h1>
-                    <marquee>  Graficos Economicos</marquee>
+                    <marquee>  Graficos Economicos </marquee>
                 </h1>
                 <div class="container">
-                    <div> class="graph" {{reserva01}}</div>
-                    <div> class="graph" {{reserva02}}</div>
+                    <div class="graph"> {{reserva01|safe }} </div>
+                    <div class="graph"> {{reserva02|safe }} </div>
                 </div>    
-            </div>"
+            </body>
          </html>
 
 
