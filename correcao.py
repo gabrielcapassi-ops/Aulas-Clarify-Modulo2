@@ -14,6 +14,7 @@ from sklearn.preprocessing import StandardScaler
 
 app = Flask (__name__)
 caminhoBd = config.DB_PATH
+rotas = config.ROTAS
 
 def init_db():
     with sqlite3.connect(caminhoBd) as conn:
@@ -33,28 +34,30 @@ def init_db():
         conn.commit()
 vazio = 0
 
-@app.route('/')
+@app.route(rotas[0])
 def index():
-    return render_template_string('''
-        <h1>Upload de dados Economicos<h1>
-        <form action="/upload" method="POST" enctype="multipart/form-data">                          
-            <label for="campo_inadimplencia">Arquivo de Inadimplencia (CSV)<label>
+    return render_template_string(f'''
+        <h1>Upload de dados Economicos</h1>
+        <form action=""{rotas[1]}"" method="POST" enctype="multipart/form-data">                          
+            <label for="campo_inadimplencia">Arquivo de Inadimplencia (CSV)</label>
             <input name = campo_inadimplencia" type="file" required>
 
-            <label for="campo_selic">Arquivo da Taxa Selic (CSV) <label>
+            <label for="campo_selic">Arquivo da Taxa Selic (CSV) </label>
             <input name=campo_selic" type="file" required>
 
             <input type="submit" value="Fazer Upload">
-        </form>]<br></br>
+        </form>
+        <br></br>
         <hr>
-        <a href="/consultar">Consultar dados armazenados<a><br>
-        <a href="/graficos">Visualizar Graficos<a><br>
-        <a href="/editar inadimplencia">Editar dados de Inadimplencia<a><br>
-        <a href="/correlacao">Analisar Correlacao<a><br>
-        <a href="/grafico3d">Observabilidade em 3<a><br>
+        <a href="{rotas[2]}">Consultar dados armazenados<a></br>
+        <a href="{rotas[3]}">Visualizar Graficos<a></br>
+        <a href="{rotas[4]}">Editar dados de Inadimplencia<a></br>
+        <a href="{rotas[5]}"">Analisar Correlacao<a></br>
+        <a href="{rotas[6]}">Observabilidade em 3<a></br>
+        <a href="{rotas[7]}">Editar Selic<a></br>
 ''')
 
-app.route('/upload', methods=['POST','GET'])
+@app.route(rotas[1], methods=['POST','GET'])
 def upload():
     inad_file = request.files.get('campo_inadimplencia')
     selic_file = request.files.get('campo_selic')
@@ -108,7 +111,7 @@ def upload():
     return jsonify({"Mensagem":"Dados cadastrados com sucesso!"})
 
 
-@app.route('/consultar', methods=['GET','POST'])
+@app.route(rotas[2], methods=['GET','POST'])
 def consultar():
 
     if request.method == "POST":
@@ -118,31 +121,107 @@ def consultar():
         with sqlite3.connect(caminhoBd) as conn:
             df = pd.read_sql_query(f'SELECT * FROM {tabela}', conn)
         return df.to_html(index=False)
-    
-
-
         
 
-    return render_template_string('''
+    return render_template_string(f'''
         <h1> Consulta de Tabelas </h1>
         <form method="POST">
-            <label dor="campo_tabela"> Escolha uma tabela: </label>
-            <select>
+            <label for="campo_tabela"> Escolha uma tabela: </label>
+            <select name="campo_tabela">
                 <option value="inadimplencia"> Inadimplencia </option>
                 <option value="selic"> Taxa Selic </option>
             </select>
-            <input type="submit" value-"Consultar">
+            <input type="submit" value="Consultar">
         </form>
-        <br><a href="/"> Voltar <a>
+        <br><a href="{rotas[0]}"> Voltar </a>
                          
 
     ''')
 
+@app.route(rotas[3])
+def graficos():
+    with sqlite3.connect(caminhoBd) as conn:
+        inad_df = pd.read_sql_query('SELECT * FROM inadimplencia',conn)
+        selic_df = pd.read_sql_query('SELECT * FROM selic',conn)
+    
+    ####### Aqui criei um gráfico para inadimplencia
+    fig1 = go.Figure()
+    fig1.add_trace(go.Scatter(
+            x = inad_df['mes'],
+            y = inad_df['inadimplencia'],
+            mode = 'lines+markers',
+            name = 'Inadimplencia'
+        )
+    )
+
+    #### Tipos de templates ggplot2, seaborn, simple_white, plotly, plotly_white, plotly_dark, presentation, xgridoff, ygridoff, gridon, none
+    fig1.update_layout(
+        title = 'Evolucao da Inadimplencia',
+        xaxis_title = 'Mês',
+        yaxis_title = '%',
+        template = 'plotly_dark'
+    )
 
 
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatter(
+            x = inad_df['mes'],
+            y = inad_df['selic_diaria'],
+            mode = 'lines+markers',
+            name = 'Selic'
+        )
+    )
+
+    fig2.update_layout(
+        title = 'Media mensal da Selic',
+        xaxis_title = 'Mês',
+        yaxis_title = 'Taxa',
+        template = 'plotly_dark'
+    )
+
+    graph_html_1 = fig1.to_html(
+        full_html = False,
+        include_plotlyjs = "cdn"
+    )
+
+    graph_html_2 = fig2.to_html(
+        full_html = False,
+        include_plotlyjs = "False"
+    )
+    return render_template_string('''
+        <html>
+            <head>
+                <title> Graficos Economicos </title>
+                    <style>
+                        .container{
+                            display:flex;
+                            justify-content:space-around;
+                        }
+                        .graph{
+                                width: 48%;
+                        
+                        }    
+
+
+                    </style>
+            </head>
+            <body>
+                <h1>
+                    <marquee>  Graficos Economicos</marquee>
+                </h1>
+                <div class="container">
+                    <div> class="graph" {{reserva01}}</div>
+                    <div> class="graph" {{reserva02}}</div>
+                </div>    
+            </div>"
+         </html>
+
+
+''', reserva01 = graph_html_1, reserva02 = graph_html_2)
 
 
 if __name__ == '__main__':
+
     init_db()
     app.run(
         debug = config.FLASK_DEBUG,
