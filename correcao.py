@@ -74,17 +74,17 @@ def upload():
     selic_df = pd.read_csv(
         selic_file,
         sep = ';',
-        names = ['data', 'selic'],
+        names = ['data', 'selic_diaria'],
         header = 0
     )
 
     inad_df['data'] = pd.to_datetime(
         inad_df['data'],
-        format="%d%m%Y"
+        format="%d/%m/%Y"
     )
     selic_df['data'] = pd.to_datetime(
         selic_df['data'],
-        format="%d%m%Y"                                  
+        format="%d/%m/%Y"                                  
     )
 
     inad_df['mes'] = inad_df['data'].dt.to_period('M').astype(str)
@@ -225,6 +225,22 @@ def graficos():
 
 @app.route(rotas[4], methods=['POST', 'GET'])
 def editar_inadimplencia():
+    if request.method == "POST":
+        mes = request.form.get('campo_mes')
+        novo_valor = request.form.get('campo_valor')
+        try:
+            novo_valor = float(novo_valor)
+        except:
+            return jsonify({"Erro":"Valor Invalido"})
+        with sqlite3.connect(caminhoBd) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                    UPDATE inadimplencia
+                    SET inadimplencia = ?
+                    WHERE mes = ?
+            ''')
+            conn.commit()
+        return jsonify({"Mensagem":f"Valor atualizado para o mês {mes}"})
 
     return render_template_string(f'''
         <h1> Editar Inadimplencia </h1>
