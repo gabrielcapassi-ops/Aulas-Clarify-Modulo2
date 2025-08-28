@@ -238,7 +238,7 @@ def editar_inadimplencia():
                     UPDATE inadimplencia
                     SET inadimplencia = ?
                     WHERE mes = ?
-            ''')
+            ''', (novo_valor,mes))
             conn.commit()
         return jsonify({"Mensagem":f"Valor atualizado para o mês {mes}"})
 
@@ -302,10 +302,10 @@ def editar_selic():
 def correlacao():
     with sqlite3.connect(caminhoBd) as conn:
         inad_df = pd.read_sql_query("SELECT * FROM inadimplencia", conn)
-        editar_df = pd.read_sql_query("SELECT * FROM selic", conn)
+        selic_df = pd.read_sql_query("SELECT * FROM selic", conn)
         
     # realiza ima junção entre dois dataframes usando a coluna de mes como chave de junção
-    merged = pd.merge(inad_df, editar_selic, on='mes')
+    merged = pd.merge(inad_df, selic_df, on='mes')
     #calcula o coeficiente da correlação de pearson entre as duas variaveis (inadimplencia e Selic)
     correl = merged['inadimplencia'].corr(merged['selic_diaria'])
 
@@ -321,7 +321,7 @@ def correlacao():
     
     # a partir daqui vamos gerar o gráfico
     fig = go.Figure()
-    fig.add_trace(go.scatter(
+    fig.add_trace(go.Scatter(
         x = x,
         y = y,
         mode = 'markers',
@@ -339,8 +339,8 @@ def correlacao():
     #adicionar a linha de tendencia
     fig.add_trace(go.Scatter(
         x = x, #mesmo eixo dos dados
-        y = y * x + b, #a equação da linha de tendencia
-        modo = 'lines',
+        y = m * x + b, #a equação da linha de tendencia
+        mode = 'lines',
         name = 'Linha de Tendência',
         line = dict(
             color = 'rgba(255,53, 59, 1)',
@@ -389,7 +389,7 @@ def correlacao():
             ),
             gridcolor = 'lightgray'
         ),
-        Font = dict(
+        font = dict(
             family = 'Arial',
             size = 14,
             color = 'black'
@@ -415,7 +415,7 @@ def correlacao():
     # gera o html do gráfico sem o código javascript necessário para o gráfico funcionar (inclusão externa)
     graph_html = fig.to_html(
         full_html = False,
-        include_plotyjs = 'cdn'
+        include_plotlyjs = 'cdn'
         )
     return render_template_string('''
         <html>
@@ -431,10 +431,10 @@ def correlacao():
             </head>
             <body>
                 <div class="container">
-                    <h1>Correlação entre Selic e INadimplencia</h1>
+                    <h1>Correlação entre Selic e Inadimplencia</h1>
                     <div>{{ grafico|safe }}</div>
                     <br>
-                    <div><<a href="{voltar}">Voltar</a></div>
+                    <div><a href="{{voltar}}">Voltar</a></div>
                 </div>
             </body>
         </html>
