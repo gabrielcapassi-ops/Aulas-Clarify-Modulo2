@@ -13,7 +13,7 @@ def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
 
-    lat_candidates = ['lat', 'latitude', 'Latitude','LAT', 'Lat''LATITUDE']
+    lat_candidates = ['lat', 'latitude', 'Latitude','LAT', 'Lat','LATITUDE']
     lon_candidates = ['lon', 'longitude', 'Longitude', 'LON', 'Lon', 'LONGITUDE']
     cost_candidates =['custo','valor','preço', 'preco','cost','valor_total', 'price']
     name_candidates =['nome', 'descricao', 'titulo', 'name', 'title', 'local','place']
@@ -57,7 +57,7 @@ def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
     out = out.dropna(subset=['lat','lon']).reset_index(drop=True)
 
     #preenche o custo ausente
-    if out['custo'].notna().any:
+    if out['custo'].notna().any():
         med = float(out['custo'].median())
         if not np.isfinite(med):
             med = 1.0
@@ -80,7 +80,7 @@ def city_center(df: pd.DataFrame) -> dict:
 
 #--------------------------Traces------------------------------------
 def make_point_trace(df:pd.DataFrame,name:str)->go.Scattermapbox:
-    hover = ("<b>${customdata[0]}</b><br>"
+    hover = ("<b>%{customdata[0]}</b><br>"
              "Custo: %{customdata[1]}<br>"
              "Lat: %{lat:.5f}<br>Lon: %{lon:.5f}")
     # tamanho dos marcadores (normalizados pelo custo)
@@ -102,12 +102,12 @@ def make_point_trace(df:pd.DataFrame,name:str)->go.Scattermapbox:
 
     return go.Scattermapbox(
         lat = df['lat'],
-        lon =df['lon'],
+        lon = df['lon'],
         mode = 'markers',
         marker = dict(
             size = sizes,
             color = df['custo'],
-            colorscale = "Virids",
+            colorscale = "Viridis",
             colorbar = dict(title='Custo')
         ),
         name = f"{name} • Pontos",
@@ -149,7 +149,7 @@ def main():
         dict(
             label = "Nova York • Pontos",
             method ="update",
-            arg = [
+            args = [
                 {"visible":[True, False, False, False]},
                 {"mapbox": center_zoom(ny, 9)}
             ]
@@ -157,7 +157,7 @@ def main():
          dict(
             label = "Nova York • Calor",
             method ="update",
-            arg = [
+            args = [
                 {"visible":[False, True, False, False]},
                 {"mapbox": center_zoom(ny, 9)}
             ]
@@ -165,7 +165,7 @@ def main():
          dict(
             label = "Rio de Janeiro • Pontos",
             method ="update",
-            arg = [
+            args = [
                 {"visible":[False, False, True, False]},
                 {"mapbox": center_zoom(rj, 10)}
             ]
@@ -173,7 +173,7 @@ def main():
          dict(
             label = "Rio de Janeiro • Calor",
             method ="update",
-            arg = [
+            args = [
                 {"visible":[False, False, False, True]},
                 {"mapbox": center_zoom(rj, 10)}
             ]
@@ -207,7 +207,7 @@ def main():
     )
     #Salva HTML de apresentação
     fig.write_html(
-        f"{folder}mapa_custos_interativo",
+        f"{folder}mapa_custos_interativo.html",
         include_plotlyjs = "cdn",
         full_html = True
     )
