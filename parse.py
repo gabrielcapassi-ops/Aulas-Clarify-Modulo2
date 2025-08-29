@@ -71,11 +71,26 @@ def interpretador(codigo, variaveis=None):
         else:
             print(f'Comando não foi reconhecido {linha}')
 
-codigo = """
+codigo_exemplo = """
     definir nome como "lalala"
     mostrar "O nome é" + nome
     se verdadeiro então mostrar "Isso é verdadeiro"
     enquanto verdadeiro faça mostrar "Dentro do laço"
 """
 
-interpretador(codigo)
+escolha = input("digite 1 para rodar o codigo de exemplo ou 2 para digitar o seu proprio codigo)" \
+"")
+if escolha == "1":
+    interpretador(codigo_exemplo)
+elif escolha == "2":
+    print("Digite seu código (linha a linha). Para terminar deixe a linha em branco e pressione enter ou digite 'fim'")
+    linhas = []
+    while True:
+        linha = input()
+        if not linha or linha.strip().upper == "FIM":
+            break
+        linhas.append(linha)
+    codigo_usuario = "\n".join(linhas)
+    interpretador(codigo_usuario)
+else:
+    print("Opção Invalida!")
