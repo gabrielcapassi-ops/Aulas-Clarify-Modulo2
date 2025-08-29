@@ -3,7 +3,6 @@
 # | | | | | | |/ _` | '__| __/ _ \ __/ _ \ 
 # | |_| | |_| | (_| | |  | ||  __/ || (_) |
 #  \__\_\\__,_|\__,_|_|   \__\___|\__\___/ 
-
 #Linguagem: Quarteto
 #Autor:
 #Versão 28-08-2025
@@ -11,7 +10,6 @@
 
 def interpretador(codigo, variaveis=None):
     #quebra o código em linhas
-    
     if variaveis is None:
         #Um dicionário para armazenar as variáveis
         variaveis = {}
@@ -28,7 +26,7 @@ def interpretador(codigo, variaveis=None):
     linhas = codigo.split('\n')
     for linha in linhas:
         linha = linha.strip() #Remove qualquer espaço desnecessário
-        if not linhas: #ignora linhas vazias
+        if not linha: #ignora linhas vazias
             continue
 
         #Se for uma linha de definir
@@ -42,12 +40,11 @@ def interpretador(codigo, variaveis=None):
             valor = valor.strip()
             if len(valor) >= 2 and valor [0] == '"' and valor[1] == '"':
                 valor = valor [1:-1]
-                variaveis[nome] = valor           
-
+            variaveis[nome] = valor           
 
         #Se for uma linha de mostrar
         elif linha.startswith("mostrar"):
-            conteudo = linha[7:].strip().strip('"')
+            conteudo = linha[7:].strip()
             print(eval_texto(conteudo))
 
         #Se for uma estrutura condicional (se)
@@ -57,7 +54,6 @@ def interpretador(codigo, variaveis=None):
                 print(f"Erro de sintaxe: {linha}") #pega o nome da variável e o valor
                 continue
             condicao, comando = resto.split(" então ", 1)                
-
             #Aqui podemos apenas checar se a condição é verdadeira ou falsa
             if condicao.strip() == "verdadeiro":
                 interpretador(comando.strip(), variaveis) #Executa o comando dentro da condição
@@ -77,7 +73,7 @@ def interpretador(codigo, variaveis=None):
 
 codigo = """
     definir nome como "lalala"
-    mostrar o nome como é + nome
+    mostrar "O nome é" + nome
     se verdadeiro então mostrar "Isso é verdadeiro"
     enquanto verdadeiro faça mostrar "Dentro do laço"
 """
