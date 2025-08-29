@@ -57,7 +57,7 @@ def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
     out = out.dropna(subset=['lat','lon']).reset_index(drop=True)
 
     #preenche o custo ausente
-    if out['custo'].notna():
+    if out['custo'].notna().any:
         med = float(out['custo'].median())
         if not np.isfinite(med):
             med = 1.0
@@ -85,7 +85,7 @@ def make_point_trace(df:pd.DataFrame,name:str)->go.Scattermapbox:
              "Lat: %{lat:.5f}<br>Lon: %{lon:.5f}")
     # tamanho dos marcadores (normalizados pelo custo)
     c = df["custo"].astype(float).values
-    c_min, c_max = float(np.min(c), np.max(c))
+    c_min, c_max = float(np.min(c)), float(np.max(c))
 
     #Caso Especial: se nao existitem valores numericos validos ou se todos os custos forem praticamente iguais (diferenca < 1e-9) cria um array de tamanhos fixos 10 para todos os pontos
     if not np.isfinite(c_min) or not np.isfinite(c_max) or abs(c_max - c_min) < 1e-9:
@@ -93,7 +93,7 @@ def make_point_trace(df:pd.DataFrame,name:str)->go.Scattermapbox:
     else:
     #Caso normal: normaliza os custos para o intervalo [0,1] e escala para variar entre 6 e 26 (20 de amplitude mais deslocsamento de 6)
     #pontos de custo baixo ~6, pontos de custo alto ~26
-        size = (c - c_min) / (cmax - c_min) * 20 + 6
+        size = (c - c_min) / (c_max - c_min) * 20 + 6
     #mesmo que os dados estejam fora da faixa de 6 a 26 ele evita sua apresentação, forçando a ficar entre o intervalo
 
     sizes = np.clip(size, 6, 26)
@@ -130,7 +130,7 @@ def make_density_trace(df: pd.DataFrame, name: str) -> go.Densitymapbox:
 #-----------------------------------MAIN-------------------------------
 def main():
     #carrega e padroniza os dados
-    folder = "C:/Users/integral/Desktop/Python 2 Gabriel/Sistema/"
+    folder = "C:/Users/integral/Desktop/Python 2 Gabriel/Sistemas/"
     ny = standardize_columns(pd.read_csv(f'{folder}ny.csv'))
     rj = standardize_columns(pd.read_csv(f'{folder}rj.csv'))
 
@@ -205,7 +205,6 @@ def main():
             x = 0.99
         )
     )
-
     #Salva HTML de apresentação
     fig.write_html(
         f"{folder}mapa_custos_interativo",
